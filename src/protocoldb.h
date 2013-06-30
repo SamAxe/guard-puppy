@@ -23,6 +23,7 @@ email                : simon@simonzone.com
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <sstream>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -134,10 +135,10 @@ public:
     std::string getRangeString() const
     {
         std::stringstream result;
-        if (start == end)
-            result << start;
+        if (getStart() == getEnd())
+            result << getStart();
         else
-            result << start << ":" << end;
+            result << getStart() << ":" << getEnd();
         return result.str();
     }
 
@@ -193,10 +194,9 @@ public:
     int getCode() const { return code; }
     uint getType() const { return type; }
 
-    void print() const
+    void print(std::ostream & out = std::cerr) const
     {
-        fprintf(stderr,"[ Start: %u End: %u ]",
-                start,end);
+        out << "Start: "<< (int)getStart() <<" End: "<< (int)getEnd();
     }
 };
 
@@ -227,7 +227,7 @@ public:
 
     void addPragmaValue( std::string const & value )
     {
-        std::cout << "Pragma " << lastPragmaName << " = " << value << std::endl;
+        //std::cout << "Pragma " << lastPragmaName << " = " << value << std::endl;
         pragma[ lastPragmaName ] = value;
     }
 
@@ -265,33 +265,32 @@ public:
     ~ProtocolNetUse()
     { }
 
-    void print() const
+    void print( std::ostream & out = std::cerr) const
     {
-
-        fprintf(stderr,"[Description: %s ",(const char *)description.c_str());
+        //out << std:: endl << ;
+        if(!description.empty())
+            out << "  Description: " << description.c_str() << std::endl << " ";
+        out << "  Type: ";
         switch(type)
         {
             case IPPROTO_TCP:
-                fprintf(stderr," Type: tcp ");
+                out << "TCP ";
                 break;
 
             case IPPROTO_UDP:
-                fprintf(stderr," Type: udp ");
+                out << "UDP ";
                 break;
 
             case IPPROTO_ICMP:
-                fprintf(stderr," Type: icmp ");
+                out << "ICMP ";
                 break;
 
             default:
-                fprintf(stderr," Type: %d ",(int)type);
+                out << (int)type << " ";
                 break;
         }
-        fprintf(stderr," Source: ");
-        sourcedetail.print();
-        fprintf(stderr," Dest: ");
-        destdetail.print();
-        fprintf(stderr,"]");
+        out << std::endl << "    Source: " << sourcedetail.getRangeString();
+        out << std::endl <<  "    Dest: " << destdetail.getRangeString();
     }
     bool sourcePortEquals(uint port)
     {
@@ -352,7 +351,7 @@ public:
     }
     void addPragmaValue( std::string const & value )
     {
-        std::cout << "Pragma " << lastPragmaName << " = " << value << std::endl;
+        //std::cout << "Pragma " << lastPragmaName << " = " << value << std::endl;
         pragma[ lastPragmaName ] = value;
     }
 
@@ -379,39 +378,37 @@ public:
 
     }
 
-    void print() const
+    void print(std::ostream & out = std::cerr) const
     {
 
-        fprintf(stderr,"[ Name: %s Longname: %s Threat: ",name.c_str(),longname.c_str());
+        out << "Name: " << name.c_str() << std::endl << "Longname: "<< longname.c_str()<< std::endl;
         switch(threat)
         {
             case SCORE_LOW:
-                fprintf(stderr,"low");
+                out << "Threat: Low" << std::endl;
                 break;
             case SCORE_MEDIUM:
-                fprintf(stderr,"medium");
+                out << "Threat: Medium" << std::endl;
                 break;
             case SCORE_HIGH:
-                fprintf(stderr,"high");
-                break;
+                out << "Threat: High" << std::endl;
             default:
-                fprintf(stderr,"unknown");
-                break;
+            break;
         }
-        fprintf(stderr," Classification: ");
+        out  << "Classification: ";
 
         if(Classification != "")
-            std::cerr << Classification;
-
+            out << Classification;
+        int i(1);
         BOOST_FOREACH( ProtocolNetUse const & x, networkuse )
         {
-            x.print();
+            out << std::endl << i++;
+            x.print(out);
         }
-        fprintf(stderr,"]");
     }
 
     std::string getName() const        { return name; }
-    void setName( std::string const & n ) { name = n; }
+    void setName( std::string const & n ) { name = n; longname = n;  }
 
     std::vector<uchar> getTypes() const
     {
@@ -502,7 +499,7 @@ public:
             }
         }
         if (n != i)
-            std::cerr << "Index too great" << std::endl;
+            {}//std::cerr << "Index too great" << std::endl;
     }
 
     std::vector< ProtocolEntry > const & getProtocolDataBase() const
@@ -517,8 +514,28 @@ public:
 
     void UserDefinedProtocol(std::string name, uchar udptype, uint startp, uint endp, bool bi)
     {
-        ProtocolEntry entry( name );
-        entry.longname = name;
+        bool test(true);
+        int i(0);
+        ProtocolEntry entry("URPPYEPRRPOOO24601");
+        do
+        {
+            std::stringstream n;
+            n << name;
+            if(i!=0)
+                n << i;
+            try
+            {
+                lookup(n.str());
+            }
+            catch(...)
+            {
+                entry.setName(n.str());
+                test = false;
+            }
+            i++;
+        }
+        while(test);
+
         entry.Classification = "User Defined";
         ProtocolNetUse netuse;
         netuse.addDest(ProtocolNetUseDetail(PORTRANGE_RANGE, startp, endp));
@@ -718,16 +735,16 @@ public:
         reader.setContentHandler(this);
         reader.setErrorHandler(this);
         parseerror.clear(); //.truncate(0);
-        std::cout << "Parsing...";
+        //std::cout << "Parsing...";
         if ( reader.parse(source))
         {
-            std::cout << "success" << std::endl;
+            //std::cout << "success" << std::endl;
             rc = true;
         }
         else
         {
-            std::cout << "failed" << std::endl;
-            std::cout << errorString().toStdString() << std::endl;
+            //std::cout << "failed" << std::endl;
+            std::cerr << errorString().toStdString() << std::endl;
             rc = false;
         }
 
@@ -764,7 +781,7 @@ public:
                         i = atts.index(protocolnamespace.c_str(),nameattr.c_str());
                         if(i==-1)
                         {
-                            std::cerr << "  errorstate = PROTOCOL_ERROR_ENTRY_NAME_ATTR_NOT_FOUND" << std::endl;
+                            //std::cerr << "  errorstate = PROTOCOL_ERROR_ENTRY_NAME_ATTR_NOT_FOUND" << std::endl;
                             errorstate = PROTOCOL_ERROR_ENTRY_NAME_ATTR_NOT_FOUND;
                             return false;
                         }
@@ -901,7 +918,7 @@ public:
                                 currentnetuse.setSource( ENTITY_SERVER );
                             else
                             {
-                                std::cerr << "   errorstate = PROTOCOL_ERROR_TCP_SOURCE_UNKNOWN " << std::endl;
+                                //std::cerr << "   errorstate = PROTOCOL_ERROR_TCP_SOURCE_UNKNOWN " << std::endl;
                                 errorstate = PROTOCOL_ERROR_TCP_SOURCE_UNKNOWN;
                                 return false;
                             }
@@ -917,7 +934,7 @@ public:
                                 currentnetuse.setDest( ENTITY_SERVER );
                             else
                             {
-                                std::cerr << "   errorstate = PROTOCOL_ERROR_TCP_DEST_UNKNOWN " << std::endl;
+                                //std::cerr << "   errorstate = PROTOCOL_ERROR_TCP_DEST_UNKNOWN " << std::endl;
                                 errorstate = PROTOCOL_ERROR_TCP_DEST_UNKNOWN;
                                 return false;
                             }
@@ -940,7 +957,7 @@ public:
                                 currentnetuse.setSource( ENTITY_SERVER );
                             else
                             {
-                                std::cerr << "   errorstate = PROTOCOL_ERROR_UDP_SOURCE_UNKNOWN" << std::endl;
+                                //std::cerr << "   errorstate = PROTOCOL_ERROR_UDP_SOURCE_UNKNOWN" << std::endl;
                                 errorstate = PROTOCOL_ERROR_UDP_SOURCE_UNKNOWN;
                                 return false;
                             }
@@ -956,7 +973,7 @@ public:
                                 currentnetuse.setDest( ENTITY_SERVER );
                             else
                             {
-                                std::cerr << "   errorstate = PROTOCOL_ERROR_UDP_DEST_UNKNOWN" << std::endl;
+                                //std::cerr << "   errorstate = PROTOCOL_ERROR_UDP_DEST_UNKNOWN" << std::endl;
                                 errorstate = PROTOCOL_ERROR_UDP_DEST_UNKNOWN;
                                 return false;
                             }
@@ -984,7 +1001,7 @@ public:
                                 currentnetuse.setSource( ENTITY_SERVER );
                             else
                             {
-                                std::cerr<<"   errorstate = PROTOCOL_ERROR_ICMP_SOURCE_UNKNOWN"<<std::endl;
+                                //std::cerr<<"   errorstate = PROTOCOL_ERROR_ICMP_SOURCE_UNKNOWN"<<std::endl;
                                 errorstate = PROTOCOL_ERROR_ICMP_SOURCE_UNKNOWN;
                                 return false;
                             }
@@ -1000,7 +1017,7 @@ public:
                                 currentnetuse.setDest( ENTITY_SERVER );
                             else
                             {
-                                std::cerr << "   errorstate = PROTOCOL_ERROR_ICMP_SOURCE_UNKNOWN" << std::endl;
+                                //std::cerr << "   errorstate = PROTOCOL_ERROR_ICMP_SOURCE_UNKNOWN" << std::endl;
                                 errorstate = PROTOCOL_ERROR_ICMP_DEST_UNKNOWN;
                                 return false;
                             }
@@ -1584,7 +1601,7 @@ public:
             pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::longname, boost::phoenix::arg_names::arg1) == name );
             if ( pit == protocolDataBase.end() )
             {
-                std::cout << "Didn't protocol database: " << name << std::endl;
+                //std::cout << "Didn't protocol database: " << name << std::endl;
                 throw std::string("Zone not found 4");
             }
         }
@@ -1599,7 +1616,7 @@ public:
             pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::longname, boost::phoenix::arg_names::arg1) == name );
             if ( pit == protocolDataBase.end() )
             {
-                std::cout << "Didn't protocol database: " << name << std::endl;
+                //std::cout << "Didn't protocol database: " << name << std::endl;
                 throw std::string("Zone not found 5");
             }
         }
