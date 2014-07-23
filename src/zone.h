@@ -5,9 +5,6 @@
 #include <map>
 
 #include <boost/foreach.hpp>
-#include <boost/spirit/home/phoenix/core.hpp>
-#include <boost/spirit/home/phoenix/operator.hpp>
-#include <boost/spirit/home/phoenix/bind.hpp>
 
 #include "protocoldb.h"
 #include "iprange.h"
@@ -83,7 +80,7 @@ public:
 
     void renameMachine( std::string const & oldMachineName, std::string const & newMachineName )
     {
-        std::vector< IPRange >::iterator i = std::find_if( memberMachine.begin(), memberMachine.end(), boost::phoenix::bind( &IPRange::getAddress, boost::phoenix::arg_names::arg1) == oldMachineName );
+        std::vector< IPRange >::iterator i = std::find_if( memberMachine.begin(), memberMachine.end(), [oldMachineName]( IPRange & ipr ){ return ipr.getAddress() == oldMachineName; } );
 
         if ( i != memberMachine.end() )
             i->setAddress( newMachineName );

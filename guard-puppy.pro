@@ -5,9 +5,12 @@
 TEMPLATE = app
 TARGET = 
 DEPENDPATH += . src
-INCLUDEPATH += . src
-
+INCLUDEPATH += . src /usr/src/modular-boost
 CONFIG += debug
+QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXX = clang++
+QMAKE_CC = clang
+QMAKE_LINK = clang++
 
 # This is hacked in, but I don't care right now
 # but it shouldn't be this way
@@ -15,7 +18,8 @@ CONFIG += debug
 # and the regex library is in /usr/lib/libboost_regex
 # 
 
-LIBS += -L/usr/lib -L/usr/lib64  -lboost_regex -lboost_filesystem -lboost_system
+#LIBS += -L/usr/lib -L/usr/lib64 -L/usr/src/modular-boost/stage/lib -lboost_regex -lboost_filesystem -lboost_system
+LIBS += -L/usr/src/modular-boost/stage/lib -lboost_regex -lboost_filesystem -lboost_system
 
 QT += core
 QT += gui

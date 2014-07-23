@@ -16,12 +16,10 @@
 #include <sstream>
 
 #include <boost/algorithm/string.hpp>
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/spirit/home/phoenix/core.hpp>
-#include <boost/spirit/home/phoenix/operator.hpp>
-#include <boost/spirit/home/phoenix/bind.hpp>
 
 #include "protocoldb.h"
 #include "zone.h"
@@ -240,7 +238,7 @@ public:
             z.disconnect(zoneName);
         }
 
-        std::vector< Zone >::iterator zit = std::find_if( zones.begin(), zones.end(), boost::phoenix::bind( &Zone::getName, boost::phoenix::arg_names::arg1) == zoneName );
+        std::vector< Zone >::iterator zit = std::find_if( zones.begin(), zones.end(), [zoneName](Zone const & z) { return z.getName() == zoneName; } );
         if ( zit == zones.end() )
         {
             throw std::string("Zone not found 1");
@@ -253,7 +251,7 @@ public:
     */
     Zone const & getZone( std::string const & name ) const
     {
-        std::vector< Zone >::const_iterator zit = std::find_if( zones.begin(), zones.end(), boost::phoenix::bind( &Zone::getName, boost::phoenix::arg_names::arg1) == name );
+        std::vector< Zone >::const_iterator zit = std::find_if( zones.begin(), zones.end(), [name]( Zone const & z ) { return z.getName() == name; } );
         if ( zit == zones.end() )
         {
             throw std::string("Zone not found 2");
@@ -265,7 +263,7 @@ public:
     */
     Zone & getZone( std::string const & name )
     {
-        std::vector< Zone >::iterator zit = std::find_if( zones.begin(), zones.end(), boost::phoenix::bind( &Zone::getName, boost::phoenix::arg_names::arg1) == name );
+        std::vector< Zone >::iterator zit = std::find_if( zones.begin(), zones.end(), [name](Zone const & z) { return z.getName() == name; } );
         if ( zit == zones.end() )
         {
             throw std::string("Zone not found 3");
@@ -1534,7 +1532,7 @@ public:
 #define READSTATE_USERDEFINEDPROTOCOL 6
 #define READSTATE_PROTOCOLCONFIG    7
         //    bool ok;
-        uint udpid;
+//        uint udpid;
         uchar udptype;
         uint udpstartport;
         uint udpendport;
@@ -1808,7 +1806,7 @@ public:
             {
                 throw std::string("Error parsing firewall [UserDefinedProtocol] section. Expected '# ID='");
             }
-            udpid = boost::lexical_cast<uint>( s.substr(5));
+//            udpid = boost::lexical_cast<uint>( s.substr(5));
 
             // Snarf the NAME
             std::getline( stream, s );

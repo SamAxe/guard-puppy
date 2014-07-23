@@ -27,9 +27,6 @@ email                : simon@simonzone.com
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <boost/spirit/home/phoenix/core.hpp>
-#include <boost/spirit/home/phoenix/operator.hpp>
-#include <boost/spirit/home/phoenix/bind.hpp>
 
 
 #include <QXmlDefaultHandler>
@@ -547,10 +544,10 @@ public:
 
     void deleteProtocolEntry( std::string const & name )
     {
-        std::vector< ProtocolEntry >::iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::name, boost::phoenix::arg_names::arg1) == name );
+        std::vector< ProtocolEntry >::iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name]( ProtocolEntry const & pe) { return pe.name == name; } );
         if ( pit == protocolDataBase.end() )
         {
-            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::longname, boost::phoenix::arg_names::arg1) == name );
+            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name]( ProtocolEntry const & pe ) { return pe.longname == name; } );
             if ( pit == protocolDataBase.end() )
             {
                 std::cout << "Couldn't find protocol: " << name << std::endl;
@@ -757,7 +754,7 @@ public:
         int i;
         std::string protocolname;
         std::string tmp;
-        bool ok;
+//        bool ok;
         int x;
 
         if(unknowndepth==0)
@@ -1037,12 +1034,12 @@ public:
                             tmp = atts.value(i).toStdString();
                             try
                             {
-                                ok = true;
+//                                ok = true;
                                 x = boost::lexical_cast<uint>(tmp); //tmp.toUInt(&ok);
                             }
                             catch ( ... )
                             {
-                                ok = false;
+//                                ok = false;
                                 errorstate = PROTOCOL_ERROR_IP_PROTOCOL_ATTR_NOT_UINT;
                                 return false;
                             }
@@ -1595,10 +1592,10 @@ public:
 
     ProtocolEntry & lookup( std::string const & name )
     {
-        std::vector< ProtocolEntry >::iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::name, boost::phoenix::arg_names::arg1) == name );
+        std::vector< ProtocolEntry >::iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name](ProtocolEntry const & pe) { return pe.name == name; } );
         if ( pit == protocolDataBase.end() )
         {
-            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::longname, boost::phoenix::arg_names::arg1) == name );
+            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name](ProtocolEntry const & pe) { return pe.longname == name; } );
             if ( pit == protocolDataBase.end() )
             {
                 //std::cout << "Didn't protocol database: " << name << std::endl;
@@ -1610,10 +1607,10 @@ public:
 
     ProtocolEntry const & lookup( std::string const & name ) const
     {
-        std::vector< ProtocolEntry >::const_iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::name, boost::phoenix::arg_names::arg1) == name );
+        std::vector< ProtocolEntry >::const_iterator pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name](ProtocolEntry const & pe) { return pe.name == name; } );
         if ( pit == protocolDataBase.end() )
         {
-            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), boost::phoenix::bind( &ProtocolEntry::longname, boost::phoenix::arg_names::arg1) == name );
+            pit = std::find_if( protocolDataBase.begin(), protocolDataBase.end(), [name]( ProtocolEntry const & pe) { return pe.longname == name; } );
             if ( pit == protocolDataBase.end() )
             {
                 //std::cout << "Didn't protocol database: " << name << std::endl;
